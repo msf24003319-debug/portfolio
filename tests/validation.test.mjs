@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import { safeLink, validateProject, validateExperience } from '../lib/validation.mjs';
 const project = { title: ' App ', description: ' Useful app ', tech_stack: 'React, Supabase, React', link: 'https://example.com' };
 test('project input is trimmed and tags deduplicated', () => {
-  assert.deepEqual(validateProject(project), { title:'App', description:'Useful app', tech_stack:['React','Supabase'], link:'https://example.com/' });
+  assert.deepEqual(validateProject(project), { title:'App', description:'Useful app', tech_stack:['React','Supabase'], link:'https://example.com/', image_url:null });
+});
+test('project images accept HTTP(S), normalize blanks, and reject unsafe or oversized URLs', () => {
+  assert.equal(validateProject({ ...project, image_url: ' https://images.example.com/project.png ' }).image_url, 'https://images.example.com/project.png');
+  assert.equal(validateProject({ ...project, image_url: '   ' }).image_url, null);
+  for (const image_url of ['javascript:alert(1)', 'data:image/png;base64,test', '//example.com/image.png', 'https://user:password@example.com/image.png', 'https://example.com/' + 'x'.repeat(2048)]) {
+    assert.throws(() => validateProject({ ...project, image_url }));
+  }
 });
 test('unsafe URL schemes and embedded credentials are rejected', () => {
   for (const url of ['javascript:alert(1)', 'data:text/html,test', '//example.com', 'https://name:password@example.com']) {

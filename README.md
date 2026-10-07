@@ -116,3 +116,17 @@ Live acceptance checks after Supabase setup:
 Live authentication and RLS verification require your configured Supabase project; the local preview cannot exercise them.
 
 Implementation references: [Supabase SSR clients](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Next.js Proxy](https://nextjs.org/docs/app/getting-started/proxy).
+
+## Project images
+
+The project admin form accepts an optional public HTTP(S) image URL. Clear it to use the dark gradient fallback with a code icon and technology badges. Images use Next.js `Image` with responsive sizing and a subtle hover zoom that respects reduced-motion preferences. Images are served directly (`unoptimized`) to support public image hosts without a broad server-side image optimizer allowlist.
+
+For an existing database, run `supabase/migrations/20261007_project_images.sql` in the Supabase SQL editor before saving projects. Fresh databases get the column from `supabase/schema.sql`. Existing projects keep the fallback until you add an image URL.
+
+### Upload images from your device
+
+Run `supabase/migrations/20261007_project_image_uploads.sql` in the Supabase SQL editor for both fresh and existing installations. It includes the image column, creates the public `project-images` bucket with a 5 MB limit and JPG/PNG/WebP/GIF restrictions, and permits uploads only for authenticated portfolio admins. No service-role key is needed.
+
+Choose a file in the project form to preview it, then save the project. A selected file takes priority over the URL. The browser uploads directly to Supabase Storage and saves its public URL in `image_url`. Clear the URL and remove any selected file to restore the fallback. If saving fails after upload, the URL stays in the form so retrying does not upload another copy. Previously uploaded files remain in Storage when a project is removed or its image is replaced; remove unused files through the Supabase Storage dashboard.
+
+Upload implementation follows [Supabase standard uploads](https://supabase.com/docs/guides/storage/uploads/standard-uploads) and [Storage bucket access controls](https://supabase.com/docs/guides/storage/buckets/fundamentals).

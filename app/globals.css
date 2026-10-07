@@ -64,3 +64,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible 
 @media(max-width:780px) { .public-nav { flex-wrap:wrap; gap:6px; padding-block:14px; }.public-links { width:100%; justify-content:space-between; gap:4px 14px; }.public-links a { font-size:14px; }.contact-grid { grid-template-columns:1fr; } }
 @media(max-width:640px) { .content-page { padding-block:40px 60px; }.education-grid { grid-template-columns:1fr; }.page-heading { margin-bottom:30px; }.contact-card { padding:23px; gap:15px; }.public-links { justify-content:flex-start; gap:0 22px; }.stack-heading h2 { font-size:17px; } }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; }* { transition:none!important; }.project-card:hover { transform:none; } }
+
+.project-visual { overflow:hidden; }
+.project-image { object-fit:cover; transition:transform .45s ease; }
+.project-card:hover .project-image,.project-card:focus-within .project-image { transform:scale(1.04); }
+.project-visual-fallback { height:auto; min-height:220px; flex-direction:column; gap:20px; padding:48px 22px 20px; }
+.project-visual-tags { position:relative; justify-content:center; }
+.project-visual-tags span { background:#101827b3; border-color:#ffffff1f; color:#d0dceb; }
+@media(prefers-reduced-motion:reduce) { .project-card:hover .project-image,.project-card:focus-within .project-image { transform:none; } }
+
+.upload-preview { display:grid; gap:12px; margin-bottom:20px; }
+.upload-preview img { width:100%; height:auto; max-height:240px; object-fit:contain; border-radius:8px; background:#0b101a; }
+.upload-preview button { justify-self:start; }
+input[type=file] { max-width:100%; }

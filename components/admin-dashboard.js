@@ -1,27 +1,63 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { BriefcaseBusiness, FolderCode, LogOut, Pencil, Trash2, Plus, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { saveRecord, deleteRecord } from '@/app/admin/actions';
+import { validateProject } from '@/lib/validation.mjs';
+import { PROJECT_IMAGE_BUCKET, IMAGE_TYPES, validateImageFile, imageUploadError } from '@/lib/project-images.mjs';
 
 function RecordForm({ kind, record, onDone, onCancel }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInput = useRef(null);
   const project = kind === 'projects';
+  useEffect(() => {
+    if (!imageFile) { setImagePreview(''); return; }
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+  function chooseImage(event) {
+    setError('');
+    const file = event.target.files?.[0];
+    if (!file) { setImageFile(null); return; }
+    try { validateImageFile(file); setImageFile(file); }
+    catch (error) { event.target.value = ''; setImageFile(null); setError(error.message); }
+  }
   async function submit(event) {
     event.preventDefault(); setBusy(true); setError('');
     const form = event.currentTarget;
     try {
-      const result = await saveRecord(kind, Object.fromEntries(new FormData(form)), record?.id);
+      const input = Object.fromEntries(new FormData(form));
+      if (project) validateProject({ ...input, image_url: imageFile ? '' : input.image_url });
+      if (project && imageFile) {
+        const extension = validateImageFile(imageFile);
+        setUploading(true);
+        const storage = createClient().storage.from(PROJECT_IMAGE_BUCKET);
+        const path = `${crypto.randomUUID()}.${extension}`;
+        const { error: uploadError } = await storage.upload(path, imageFile, { contentType: imageFile.type, upsert: false });
+        if (uploadError) throw new Error(imageUploadError(uploadError));
+        input.image_url = storage.getPublicUrl(path).data.publicUrl;
+        // Keep the uploaded URL in the form so a failed save can be retried without uploading again.
+        form.elements.namedItem('image_url').value = input.image_url;
+        fileInput.current.value = '';
+        setImageFile(null);
+        setUploading(false);
+      }
+      const result = await saveRecord(kind, input, record?.id);
       if (result.error) { setError(result.error); toast.error(result.error); }
       else { toast.success(`${project ? 'Project' : 'Experience'} ${record ? 'updated' : 'added'} successfully.`); form.reset(); onDone(); }
-    } catch { setError('The connection failed. Please try again.'); toast.error('The connection failed. Please try again.'); }
-    finally { setBusy(false); }
+    } catch (error) { const message = error.message || 'The connection failed. Please try again.'; setError(message); toast.error(message); }
+    finally { setBusy(false); setUploading(false); }
   }
   return <form className="record-form" onSubmit={submit} key={record?.id ?? kind}><div className="form-title"><h2>{record ? 'Edit' : 'Add'} {project ? 'project' : 'experience'}</h2>{record && <button type="button" className="icon-button" aria-label="Cancel editing" onClick={onCancel} disabled={busy}><X size={18} /></button>}</div><fieldset disabled={busy}>
-    {project ? <><label>Project title<input name="title" required maxLength={120} defaultValue={record?.title ?? ''} placeholder="What did you build?" /></label><label>Tech stack<span className="field-help">Separate technologies with commas.</span><input name="tech_stack" required maxLength={1000} defaultValue={record?.tech_stack?.join(', ') ?? ''} placeholder="Next.js, Supabase, Tailwind CSS" /></label><label>Project link <span className="field-help inline">optional</span><input name="link" type="url" maxLength={2048} defaultValue={record?.link ?? ''} placeholder="https://example.com" /></label></> : <><label>Role<input name="role" required maxLength={120} defaultValue={record?.role ?? ''} placeholder="Full Stack Developer" /></label><label>Company<input name="company" required maxLength={120} defaultValue={record?.company ?? ''} /></label><div className="form-row"><label>Duration<input name="duration" required maxLength={100} defaultValue={record?.duration ?? ''} placeholder="01/2025–Present" /></label><label>Display order<input name="order_id" type="number" required min={0} max={10000} step={1} defaultValue={record?.order_id ?? 0} /></label></div><p className="field-help">Lower display orders appear first.</p></>}
+    {project ? <><label>Project title<input name="title" required maxLength={120} defaultValue={record?.title ?? ''} placeholder="What did you build?" /></label><label>Tech stack<span className="field-help">Separate technologies with commas.</span><input name="tech_stack" required maxLength={1000} defaultValue={record?.tech_stack?.join(', ') ?? ''} placeholder="Next.js, Supabase, Tailwind CSS" /></label><label>Upload image <span className="field-help inline">optional</span><input ref={fileInput} type="file" accept={Object.keys(IMAGE_TYPES).join(',')} onChange={chooseImage} /><span className="field-help">JPG, PNG, WebP, or GIF, up to 5 MB. A selected file takes priority over the URL.</span></label>{imagePreview && <div className="upload-preview"><Image src={imagePreview} alt="Selected project image preview" width={600} height={340} unoptimized /><button type="button" className="button secondary compact" onClick={() => { setImageFile(null); fileInput.current.value = ''; }}>Remove selected file</button></div>}<label>Image URL <span className="field-help inline">optional</span><input name="image_url" type="url" disabled={Boolean(imageFile)} maxLength={2048} defaultValue={record?.image_url ?? ''} placeholder="https://example.com/project.png" /><span className="field-help">Paste a public image URL or upload from your device. Leave both empty to show the gradient fallback.</span></label><label>Project link <span className="field-help inline">optional</span><input name="link" type="url" maxLength={2048} defaultValue={record?.link ?? ''} placeholder="https://example.com" /></label></> : <><label>Role<input name="role" required maxLength={120} defaultValue={record?.role ?? ''} placeholder="Full Stack Developer" /></label><label>Company<input name="company" required maxLength={120} defaultValue={record?.company ?? ''} /></label><div className="form-row"><label>Duration<input name="duration" required maxLength={100} defaultValue={record?.duration ?? ''} placeholder="01/2025–Present" /></label><label>Display order<input name="order_id" type="number" required min={0} max={10000} step={1} defaultValue={record?.order_id ?? 0} /></label></div><p className="field-help">Lower display orders appear first.</p></>}
     <label>Description<textarea name="description" rows={4} required maxLength={3000} defaultValue={record?.description ?? ''} placeholder={project ? 'Describe the project and what it does.' : 'Describe your responsibilities and contributions.'} /></label>
     {error && <p className="form-error" role="alert">{error}</p>}<button className="button primary" disabled={busy}><Plus size={17} />{busy ? 'Saving…' : record ? 'Save changes' : project ? 'Add project' : 'Add experience'}</button>
   </fieldset></form>;

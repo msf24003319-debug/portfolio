@@ -8,6 +8,9 @@ create table if not exists public.projects (
   link text check (link is null or (length(link) <= 2048 and link ~* '^https?://')),
   created_at timestamptz not null default now()
 );
+-- Also upgrades existing projects tables when this schema is rerun.
+alter table public.projects add column if not exists image_url text
+  check (image_url is null or (length(image_url) <= 2048 and image_url ~* '^https?://'));
 create table if not exists public.experience (
   id uuid primary key default gen_random_uuid(),
   role text not null check (length(trim(role)) between 1 and 120),
