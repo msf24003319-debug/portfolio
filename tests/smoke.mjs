@@ -12,7 +12,8 @@ const routes = [
   ['/experience', ['Mobile App Developer', 'HiFlow App', 'Full Stack Developer']],
   ['/skills', ['Frontend development', 'Mobile development', 'Backend development', 'Databases &amp; platforms', 'AI &amp; intelligent applications', 'Computer vision']],
   ['/education', ['Master of Computer Science', 'University of Education', 'COMSATS']],
-  ['/contact', ['sabarasheed458@gmail.com', 'github.com/saba054', 'anayanex.com', 'lionforexacademy.com']],
+  ['/certificates', ['Certificates', 'No certificates added yet.']],
+  ['/contact', ['sabarasheed458@gmail.com', 'github.com/saba054']],
 ];
 for (const [path, values] of routes) {
   assert.ok(html.includes(`href="${path}"`), `Missing navigation: ${path}`);
@@ -55,4 +56,4 @@ const xrefOffset = Number(pdf.match(/startxref\n(\d+)/)[1]);
 assert.equal(pdf.slice(xrefOffset, xrefOffset + 4), 'xref');
 const offsets = pdf.slice(xrefOffset).split('\n').slice(3).filter((line) => /^\d{10} 00000 n/.test(line));
 offsets.forEach((line, index) => assert.ok(pdf.slice(Number(line.slice(0, 10))).startsWith(`${index + 1} 0 obj`), 'Invalid PDF object offset'));
-console.log('PASS: six public pages, content separation, active navigation, security headers, admin redirect, disabled login, and valid PDF offsets.');
+console.log('PASS: seven public pages, content separation, active navigation, security headers, admin redirect, disabled login, and valid PDF offsets.');

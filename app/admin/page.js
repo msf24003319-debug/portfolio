@@ -12,9 +12,11 @@ export default async function AdminPage() {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) redirect('/admin/login');
   if (user.app_metadata?.portfolio_admin !== true) redirect('/admin/login?denied=1');
-  const [projects, experience] = await Promise.all([
+  const [projects, experience, education, certificates] = await Promise.all([
     supabase.from('projects').select('*').order('created_at', { ascending: false }).order('id'),
     supabase.from('experience').select('*').order('order_id').order('id'),
+    supabase.from('education').select('*').order('order_id').order('id'),
+    supabase.from('certificates').select('*').order('order_id').order('id'),
   ]);
-  return <AdminDashboard email={user.email} projects={projects.data ?? []} experience={experience.data ?? []} loadError={Boolean(projects.error || experience.error)} />;
+  return <AdminDashboard email={user.email} projects={projects.data ?? []} experience={experience.data ?? []} education={education.data ?? []} certificates={certificates.data ?? []} loadError={Boolean(projects.error || experience.error || education.error || certificates.error)} />;
 }

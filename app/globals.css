@@ -77,3 +77,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible 
 .upload-preview img { width:100%; height:auto; max-height:240px; object-fit:contain; border-radius:8px; background:#0b101a; }
 .upload-preview button { justify-self:start; }
 input[type=file] { max-width:100%; }
+
+.admin-tabs { flex-wrap:wrap; }
+.qualification-description { margin-top:14px; color:var(--muted); white-space:pre-line; }

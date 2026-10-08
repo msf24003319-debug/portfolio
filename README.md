@@ -88,7 +88,7 @@ package-lock.json
 
 - Projects are ordered by newest creation time; experience is ordered by ascending `order_id`. Set 0 for the first experience, 1 for the next, and so on.
 - Project links are optional. Only HTTP(S) URLs without embedded credentials are accepted. Links were not invented for projects with no supplied URL.
-- Skills, education, name, and contact details are static in `lib/content.js` and the corresponding pages under `app/(portfolio)/`. Dynamic project and experience descriptions are rendered as plain text.
+- Skills, name, and contact details are static in `lib/content.js` and the corresponding pages under `app/(portfolio)/`. Dynamic project and experience descriptions are rendered as plain text.
 - The CV button downloads a real PDF generated from current database records plus your skills, education, and contact information. You can replace it with your own polished PDF by putting it in `public/Saba-Rasheed-CV.pdf` and updating the hero link.
 - Server actions validate all input, confirm the admin identity, and rely on RLS. Successful changes refresh the dashboard and revalidate the relevant projects or experience route. These public pages fetch on each request, so the next page load shows updates.
 - No photo, project screenshots, or unavailable repository URLs were fabricated.
@@ -130,3 +130,9 @@ Run `supabase/migrations/20261007_project_image_uploads.sql` in the Supabase SQL
 Choose a file in the project form to preview it, then save the project. A selected file takes priority over the URL. The browser uploads directly to Supabase Storage and saves its public URL in `image_url`. Clear the URL and remove any selected file to restore the fallback. If saving fails after upload, the URL stays in the form so retrying does not upload another copy. Previously uploaded files remain in Storage when a project is removed or its image is replaced; remove unused files through the Supabase Storage dashboard.
 
 Upload implementation follows [Supabase standard uploads](https://supabase.com/docs/guides/storage/uploads/standard-uploads) and [Storage bucket access controls](https://supabase.com/docs/guides/storage/buckets/fundamentals).
+
+## Manage education and certificates
+
+Run `supabase/migrations/20261008_education_certificates.sql` in the Supabase SQL editor, including for fresh installs after the base schema. This creates education and certificate tables with public reads and admin-only writes, and preserves the two existing education entries. No certificates are invented.
+
+Use the Education and Certificates tabs in `/admin` to add, edit, delete, and order records. Education includes degree, institution, year/duration, optional description, and display order. Certificates include title, issuer, date awarded, optional description and credential URL, and display order. Lower orders appear first. `/education`, `/certificates`, and the downloadable CV read these records from Supabase. Without configuration the existing education appears as labeled preview content; certificates start empty.
