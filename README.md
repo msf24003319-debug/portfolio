@@ -17,6 +17,8 @@ Open http://localhost:3000. The home page contains your introduction and CV down
 
 ## Supabase setup
 
+The home page includes a customer feedback form and public reviews at `/#feedback`. Run the updated `supabase/schema.sql` in your Supabase SQL editor to create the feedback table, including for an existing installation. Visitors can submit a name, rating, and message without an account; successful submissions display publicly immediately and persist across visits. The latest 50 reviews are displayed. Anonymous visitors cannot edit or delete reviews; the designated admin can delete them through Supabase. Without database configuration the form is disabled. Public submissions are unverified; this version does not include spam filtering or a moderation queue.
+
 1. Create a Supabase project. In its Connect dialog, copy the project URL and **publishable key** into `.env.local`:
 
    ```dotenv

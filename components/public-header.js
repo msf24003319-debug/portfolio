@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 
 const links = [
   ['/', 'Home'], ['/projects', 'Projects'], ['/experience', 'Experience'],
-  ['/skills', 'Skills'], ['/education', 'Education'], ['/certificates', 'Certificates'], ['/contact', 'Contact'],
+  ['/skills', 'Skills'], ['/education', 'Education'], ['/certificates', 'Certificates'], ['/#feedback', 'Feedback'], ['/contact', 'Contact'],
 ];
 export default function PublicHeader() {
   const pathname = usePathname();

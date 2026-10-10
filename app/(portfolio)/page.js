@@ -2,8 +2,13 @@ import Link from 'next/link';
 import { ArrowUpRight, Download, Code2 } from 'lucide-react';
 import { isSupabaseConfigured } from '@/lib/config';
 import PortfolioStatus from '@/components/portfolio-status';
+import FeedbackSection from '@/components/feedback-section';
+import { getFeedback } from '@/lib/feedback';
 
-export default function HomePage() {
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  const feedback = await getFeedback();
   return <main id="main" className="home-main">
     <div className="container"><PortfolioStatus preview={!isSupabaseConfigured()} /></div>
     <section className="container hero" aria-labelledby="hero-title">
@@ -21,5 +26,6 @@ export default function HomePage() {
       </div>
     </section>
     <div className="container focus-strip"><span>Building across the stack</span><div><span>React & Next.js</span><span>React Native</span><span>Supabase</span><span>Python & AI</span></div></div>
+    <FeedbackSection {...feedback} />
   </main>;
 }

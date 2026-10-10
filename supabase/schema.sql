@@ -1,4 +1,29 @@
 -- Run in the Supabase SQL editor. Safe to rerun for this fresh project's schema.
+-- Customer feedback: visitors can submit and read; only the admin can delete.
+begin;
+create table if not exists public.feedback (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (length(trim(name)) between 1 and 80),
+  message text not null check (length(trim(message)) between 10 and 1500),
+  rating integer not null check (rating between 1 and 5),
+  created_at timestamptz not null default now()
+);
+create index if not exists feedback_created_at_idx on public.feedback(created_at desc, id);
+alter table public.feedback enable row level security;
+grant usage on schema public to anon, authenticated;
+revoke all on public.feedback from anon, authenticated;
+grant select on public.feedback to anon, authenticated;
+grant insert (name, message, rating) on public.feedback to anon, authenticated;
+grant delete on public.feedback to authenticated;
+drop policy if exists feedback_public_read on public.feedback;
+create policy feedback_public_read on public.feedback for select to anon, authenticated using (true);
+drop policy if exists feedback_public_insert on public.feedback;
+create policy feedback_public_insert on public.feedback for insert to anon, authenticated with check (true);
+drop policy if exists feedback_admin_delete on public.feedback;
+create policy feedback_admin_delete on public.feedback for delete to authenticated
+  using ((select auth.uid()) is not null and (select auth.jwt())->'app_metadata'->>'portfolio_admin' = 'true');
+commit;
+
 begin;
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
